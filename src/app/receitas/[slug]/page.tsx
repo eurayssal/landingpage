@@ -1,32 +1,72 @@
-"use client";  // 🔹 Adicionando o "use client" para habilitar o acesso ao `params` no lado do cliente
+import { Metadata } from "next";
+import { connectToDatabase } from "@/lib/mongodb";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+export type Params = {
+    params: {
+        slug: string;
+    };
+};
 
-async function fetchReceita(slug: string) {
-    const res = await fetch(`/api/receitas/${slug}`);
+async function getReceita(slug: string) {
+    try {
+        const client = await connectToDatabase();
+        const db = client.db("landingpagedb");
+        const collection = db.collection("recipes");
 
-    if (!res.ok) {
-        console.error("Erro ao buscar a receita");
+        const receita = await collection.findOne({ slug });
+
+        if (!receita) return null;
+
+        return {
+            _id: receita._id.toString(),
+            name: receita.name,
+            slug: receita.slug,
+            title: receita.title,
+            description: receita.description,
+            opengraph: receita.opengraph,
+            keywords: receita.keywords,
+            robots: receita.robots,
+            ingredients: receita.ingredients,
+            method: receita.method,
+            duration: receita.duration,
+            difficulty: receita.difficulty,
+        };
+    } catch (error) {
+        console.error("Erro ao buscar receita:", error);
         return null;
     }
-
-    return await res.json();
 }
 
-export default function ReceitaPage() {
-    const { slug } = useParams();  // Obtém o slug da URL dinamicamente
-    const [receita, setReceita] = useState<any>(null);
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+    const receita = await getReceita(params.slug);
 
-    useEffect(() => {
-        if (slug && typeof slug === "string") {  // Verifica se o slug é uma string
-            fetchReceita(slug).then((data) => {
-                if (data && !data.error) {
-                    setReceita(data);
-                }
-            });
-        }
-    }, [slug]);
+    if (!receita) {
+        return {
+            title: "Receita não encontrada",
+            description: "A receita que você procurou não existe.",
+        };
+    }
+
+    return {
+        title: receita.title,
+        description: receita.description,
+        openGraph: {
+            title: receita.opengraph?.title || receita.title,
+            description: receita.opengraph?.description || receita.description,
+            images: [
+                {
+                    url: receita.opengraph?.url || "",
+                    alt: receita.opengraph?.alt || "",
+                },
+            ],
+        },
+        keywords: receita.keywords,
+        robots: receita.robots,
+    };
+}
+
+export default async function ReceitaPage({ params }: Params) {
+    const receita = await getReceita(params.slug);
 
     if (!receita) {
         return (

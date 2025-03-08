@@ -1,7 +1,8 @@
 import { MongoClient } from "mongodb";
 
 const MONGODB_URI = process.env.MONGODB_URI as string;
-const MONGODB_DB = "sample_mflix";
+const MONGODB_DB = "sample_mflix"; //Todos os possíveis DBs
+//Criar um com todas as collections
 
 if (!MONGODB_URI) {
     throw new Error("❌ MONGODB_URI não está definida nas variáveis de ambiente.");
