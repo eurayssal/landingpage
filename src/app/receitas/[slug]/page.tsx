@@ -1,44 +1,9 @@
 import { Metadata } from "next";
-import { connectToDatabase } from "@/lib/mongodb";
+import { getReceita } from "@/services/receitas-service";
 
-export type Params = {
-    params: {
-        slug: string;
-    };
-};
-
-async function getReceita(slug: string) {
-    try {
-        const client = await connectToDatabase();
-        const db = client.db("landingpagedb");
-        const collection = db.collection("recipes");
-
-        const receita = await collection.findOne({ slug });
-
-        if (!receita) return null;
-
-        return {
-            _id: receita._id.toString(),
-            name: receita.name,
-            slug: receita.slug,
-            title: receita.title,
-            description: receita.description,
-            opengraph: receita.opengraph,
-            keywords: receita.keywords,
-            robots: receita.robots,
-            ingredients: receita.ingredients,
-            method: receita.method,
-            duration: receita.duration,
-            difficulty: receita.difficulty,
-        };
-    } catch (error) {
-        console.error("Erro ao buscar receita:", error);
-        return null;
-    }
-}
-
-export async function generateMetadata({ params }: Params): Promise<Metadata> {
-    const receita = await getReceita(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params;
+    const receita = await getReceita(slug);
 
     if (!receita) {
         return {
@@ -48,25 +13,26 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     }
 
     return {
-        title: receita.title,
-        description: receita.description,
+        title: receita?.title,
+        description: receita?.description,
         openGraph: {
-            title: receita.opengraph?.title || receita.title,
-            description: receita.opengraph?.description || receita.description,
+            title: receita?.opengraph?.title || receita?.title,
+            description: receita?.opengraph?.description || receita?.description,
             images: [
                 {
-                    url: receita.opengraph?.url || "",
-                    alt: receita.opengraph?.alt || "",
+                    url: receita?.opengraph?.url || "",
+                    alt: receita?.opengraph?.alt || "",
                 },
             ],
         },
-        keywords: receita.keywords,
-        robots: receita.robots,
+        keywords: receita?.keywords,
+        robots: receita?.robots,
     };
 }
 
-export default async function ReceitaPage({ params }: Params) {
-    const receita = await getReceita(params.slug);
+export default async function ReceitasPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
+    const receita = await getReceita(slug);
 
     if (!receita) {
         return (
