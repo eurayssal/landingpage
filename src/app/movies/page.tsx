@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+export const revalidate = 60;
+
 export default function Home() {
     const [items, setItems] = useState<{ _id: string; fullplot: string }[]>([]);
     const [loading, setLoading] = useState(true);
@@ -10,7 +12,12 @@ export default function Home() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch("/api/movies");
+                const response = await fetch("/api/movies", {
+                    cache: 'force-cache',
+                    next: {
+                        revalidate: 60,
+                    }
+                });
 
                 if (!response.ok) {
                     throw new Error(`Erro na API: ${response.status}`);
