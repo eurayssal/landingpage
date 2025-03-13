@@ -33,13 +33,8 @@ export default async function Home() {
   }));
 
   return (
-    <div className="">
-      <h1>Home</h1>
-      <ul>
-        {items.map((item) => (
-          <li key={item._id}>{item.fullplot}</li>
-        ))}
-      </ul>
+    <div className="bg-slate-900">
+
     </div>
   );
 }

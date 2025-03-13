@@ -39,7 +39,7 @@ export default function Home() {
     if (error) return <p>Erro: {error}</p>;
 
     return (
-        <div>
+        <div className="bg-green">
             <h1>Home</h1>
             <ul>
                 {items.length > 0 ? (
